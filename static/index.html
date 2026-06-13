@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asset Intel - Web Asset Intelligence & Infrastructure Mapping</title>
+  <meta name="description" content="Passive target infrastructure mapping, certificate link analysis, and corporate registry graph visualization dashboard.">
+  
+  <!-- Modern Typography and Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Vis.js Network Library -->
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  
+  <!-- Local Stylesheet -->
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Top Header Navigation -->
+    <header class="navbar glass-panel">
+      <div class="brand">
+        <span class="logo-glow"></span>
+        <h1 class="brand-title">ASSET <span class="accent-text">INTEL</span></h1>
+      </div>
+      <div class="system-status">
+        <span class="status-indicator online"></span>
+        <span class="status-label">Database Connected</span>
+      </div>
+    </header>
+
+    <main class="dashboard-grid">
+      <!-- Left Sidebar: Actions and Controls -->
+      <aside class="sidebar-section">
+        <!-- Target passive analysis section -->
+        <section class="glass-panel card-control" aria-labelledby="target-heading">
+          <h2 id="target-heading" class="card-title">Analyze Web Target</h2>
+          <p class="card-desc">Execute parallel, passive DNS, certificate intelligence, HTTP headers, trackers, and favicon mapping.</p>
+          <form id="analyzeForm" class="form-group">
+            <div class="input-container">
+              <input type="text" id="targetDomain" class="text-input" placeholder="e.g. allvirginia.news" required autocomplete="off" aria-label="Target domain name">
+              <span class="input-glow"></span>
+            </div>
+            <button type="submit" id="analyzeBtn" class="btn-primary">
+              <span class="btn-content">Map Infrastructure</span>
+              <span class="spinner" id="analyzeSpinner"></span>
+            </button>
+          </form>
+        </section>
+
+        <!-- Filing manual upload section -->
+        <section class="glass-panel card-control" aria-labelledby="upload-heading">
+          <h2 id="upload-heading" class="card-title">Ingest Corporate Filings</h2>
+          <p class="card-desc">Upload State Corporation Commission (SCC) corporate filings JSON to build ownership relations.</p>
+          <form id="uploadForm" class="form-group">
+            <label for="filingFile" class="drop-zone" id="dropZone">
+              <span class="drop-zone-icon">📥</span>
+              <span class="drop-zone-text">Click or drag SCC JSON file here</span>
+              <input type="file" id="filingFile" accept=".json" class="file-input" required aria-label="SCC Corporate Filing JSON file">
+            </label>
+            <div id="fileInfo" class="file-info" style="display: none;">
+              <span class="file-name" id="selectedFileName">filename.json</span>
+              <button type="button" id="removeFileBtn" class="btn-text" aria-label="Remove selected file">Remove</button>
+            </div>
+            <button type="submit" id="uploadBtn" class="btn-secondary">
+              <span class="btn-content">Ingest Ownership Data</span>
+              <span class="spinner" id="uploadSpinner"></span>
+            </button>
+          </form>
+        </section>
+
+        <!-- Node Inspector: Detailed properties -->
+        <section class="glass-panel card-control node-inspector" aria-labelledby="inspector-heading">
+          <h2 id="inspector-heading" class="card-title">Node Properties</h2>
+          <div id="inspectorEmpty" class="inspector-placeholder">
+            <div class="placeholder-icon">🔍</div>
+            <p>Select any node in the graph visualization to inspect its passive OSINT attributes and corporate metadata.</p>
+          </div>
+          <div id="inspectorContent" class="inspector-details" style="display: none;">
+            <div class="inspector-header">
+              <span class="badge" id="nodeTypeBadge">Domain</span>
+              <h3 class="node-title" id="nodeTitle">target.domain</h3>
+            </div>
+            <div class="table-container">
+              <table class="properties-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Property</th>
+                    <th scope="col">Value</th>
+                  </tr>
+                </thead>
+                <tbody id="nodePropertiesBody">
+                  <!-- Properties dynamic rows go here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <!-- Right Panel: Graph Visualization and Dashboard -->
+      <section class="main-canvas-section glass-panel" aria-labelledby="canvas-heading">
+        <h2 id="canvas-heading" class="sr-only">Graph Visualizer</h2>
+        
+        <!-- Controls and Filter bar -->
+        <div class="canvas-header">
+          <div class="graph-search">
+            <input type="text" id="graphSearchInput" class="search-input" placeholder="Search nodes (e.g. Richmond)..." aria-label="Search graph nodes">
+            <button id="clearSearchBtn" class="btn-clear-search" style="display: none;" aria-label="Clear search">×</button>
+          </div>
+          <div class="canvas-actions">
+            <button id="resetZoomBtn" class="btn-icon" title="Reset Zoom">🔄 Recenter</button>
+            <button id="togglePhysicsBtn" class="btn-icon active" title="Toggle Graph Layout Physics">⚡ Physics</button>
+          </div>
+        </div>
+
+        <!-- Vis.js Canvas container -->
+        <div class="canvas-container-wrapper">
+          <div id="networkCanvas" class="network-canvas"></div>
+          
+          <!-- Splash Loader -->
+          <div id="canvasLoader" class="canvas-loader" style="display: none;">
+            <div class="pulse-ring"></div>
+            <div class="loader-text">Loading telemetry...</div>
+          </div>
+        </div>
+
+        <!-- Bottom Panel Legend -->
+        <footer class="canvas-footer">
+          <div class="legend-title">Graph Legend:</div>
+          <div class="legend-items">
+            <div class="legend-item"><span class="legend-dot dot-domain"></span> Domain</div>
+            <div class="legend-item"><span class="legend-dot dot-ip"></span> IP Address</div>
+            <div class="legend-item"><span class="legend-dot dot-cert"></span> Certificate</div>
+            <div class="legend-item"><span class="legend-dot dot-entity"></span> Entity (Company/Indiv.)</div>
+            <div class="legend-item"><span class="legend-dot dot-address"></span> Address</div>
+          </div>
+        </footer>
+      </section>
+    </main>
+    
+    <!-- Global Status Toast Console -->
+    <div id="statusToast" class="status-toast" role="status" aria-live="polite">
+      <span id="statusToastText">Welcome to Asset Intel</span>
+    </div>
+  </div>
+
+  <!-- Javascript Logic -->
+  <script src="/app.js"></script>
+</body>
+</html>

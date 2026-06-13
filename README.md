@@ -42,22 +42,72 @@ asset_intel/
         └── ai_mapper.py       # Corporate filing parser mapping utility
 ```
 
+## Web Dashboard & Interactive Visualizations
+
+Phase 2 adds a lightweight, mobile-responsive Web UI and API layer:
+- **FastAPI Backend**: Exposes endpoints for initiating passive asset intelligence mapping, uploading corporate filings, and querying the current Neo4j database graph.
+- **Vis.js Network Graph**: Renders the complete ownership, infrastructure, and location relationships interactively (zoom, pan, search, physics settings, property inspect sidebar).
+- **Homelab Ready**: Deployable as a single container stack with automatic database health checks.
+
+## Project Structure (Updated)
+
+```text
+asset_intel/
+├── README.md
+├── requirements.txt
+├── app.py                     # FastAPI backend server
+├── Dockerfile                 # Docker configuration for FastAPI
+├── docker-compose.yml         # Compose stack setup (db + web)
+├── static/                    # Frontend visualizer files
+│   ├── index.html             # Dashboard layout
+│   ├── style.css              # Glassmorphism dark slate UI styles
+│   └── app.js                 # Vis.js graph rendering script
+└── asset_intel/               # Core packages (collectors, models, etc.)
+```
+
 ## Setup & Running
 
-1. **Install dependencies**:
+### Option A: Local Dev Server
+
+1. **Install requirements**:
+   Ensure `python-multipart` and `httpx` are installed alongside standard dependencies:
    ```bash
-   pip install pydantic neo4j python-dotenv
+   pip install -r requirements.txt
+   pip install -r asset_intel/requirements.txt
+   pip install python-multipart httpx
    ```
 
-2. **Configure environment (Optional)**:
-   Ensure you have a local Neo4j instance running (Community or Enterprise edition). Create a `.env` file or export details:
+2. **Configure environment (.env)**:
+   Create a `.env` in the root:
    ```env
    NEO4J_URI=bolt://localhost:7687
    NEO4J_USER=neo4j
-   NEO4J_PASSWORD=your_password
+   NEO4J_PASSWORD=password
    ```
 
-3. **Run Analysis**:
+3. **Start the FastAPI App**:
    ```bash
-   python -m asset_intel.main example.com
+   uvicorn asset_intel.app:app --host 0.0.0.0 --port 8000
    ```
+   Open `http://localhost:8000` in your web browser.
+
+### Option B: Homelab Docker Compose (Recommended)
+
+To spin up the entire platform (FastAPI + Neo4j Database) with persistent data volumes:
+
+```bash
+# Navigate to the compose directory
+cd asset_intel
+
+# Spin up the containers
+docker-compose up --build -d
+```
+- Open **Web Dashboard UI**: `http://localhost:8000`
+- Open **Neo4j Browser Console**: `http://localhost:7474` (User: `neo4j`, Password: `password`)
+
+## Verification & Testing
+
+To execute the unit and API integration tests:
+```bash
+PYTHONPATH=. pytest
+```

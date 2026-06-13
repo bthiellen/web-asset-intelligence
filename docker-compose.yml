@@ -1,0 +1,35 @@
+services:
+  db:
+    image: neo4j:5.20-community
+    container_name: asset-intel-db
+    ports:
+      - "7474:7474" # Neo4j Browser Console
+      - "7687:7687" # Bolt Protocol Interface
+    environment:
+      - NEO4J_AUTH=neo4j/password
+    volumes:
+      - ./data/neo4j/data:/data
+      - ./data/neo4j/logs:/logs
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:7474/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ..
+      dockerfile: asset_intel/Dockerfile
+    container_name: asset-intel-web
+    ports:
+      - "8000:8000" # Web Dashboard UI and API
+    environment:
+      - NEO4J_URI=bolt://db:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=password
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped

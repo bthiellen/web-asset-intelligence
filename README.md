@@ -105,6 +105,18 @@ docker-compose up --build -d
 - Open **Web Dashboard UI**: `http://localhost:8000`
 - Open **Neo4j Browser Console**: `http://localhost:7474` (User: `neo4j`, Password: `password`)
 
+#### Data Persistence & Wiping
+
+- **Data Persistence**: The docker-compose configurations bind the Neo4j storage database to your local host folder under `./data/neo4j`. Scans, domains, and corporate mappings persist across container restarts.
+- **Resetting / Wiping Data**: If you want to wipe all records and target URLs to start completely fresh:
+  ```bash
+  # Stop and remove containers
+  docker-compose down
+  
+  # Remove the persistent data folder from your host
+  rm -rf data/
+  ```
+
 ## Verification & Testing
 
 To execute the unit and API integration tests:

@@ -104,11 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         borderWidth: 1.5,
         shadow: {
-          enabled: true,
-          color: 'rgba(0,0,0,0.4)',
-          size: 5,
-          x: 0,
-          y: 3
+          enabled: false
         }
       },
       edges: {
@@ -130,21 +126,18 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         width: 1,
         smooth: {
-          enabled: true,
-          type: 'cubicBezier',
-          forceDirection: 'none',
-          roundness: 0.4
+          enabled: false
         }
       },
       physics: {
         enabled: state.physicsEnabled,
         barnesHut: {
-          gravitationalConstant: -1800,
-          centralGravity: 0.15,
-          springLength: 120,
-          springConstant: 0.04,
+          gravitationalConstant: -2000,
+          centralGravity: 0.2,
+          springLength: 100,
+          springConstant: 0.05,
           damping: 0.09,
-          avoidOverlap: 0.3
+          avoidOverlap: 0.4
         },
         stabilization: {
           enabled: true,
@@ -163,6 +156,14 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     state.network = new vis.Network(container, data, options);
+
+    // Freeze physics once stabilization iterations are done to save CPU usage
+    state.network.on('stabilizationIterationsDone', () => {
+      state.network.setOptions({ physics: { enabled: false } });
+      state.physicsEnabled = false;
+      togglePhysicsBtn.classList.remove('active');
+      showToast('Layout stabilized and frozen (CPU load reduced to 0%)', 'success');
+    });
 
     // Node selection event
     state.network.on('selectNode', (params) => {

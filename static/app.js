@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     rawNodes: [],
     rawEdges: [],
     physicsEnabled: true,
+    isManualPhysics: false,
     selectedNodeId: null,
     selectedFile: null
   };
@@ -141,8 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         stabilization: {
           enabled: true,
-          iterations: 150,
-          updateInterval: 25,
+          iterations: 1000,
+          updateInterval: 50,
           onlyDynamicEdges: false,
           fit: true
         }
@@ -151,18 +152,51 @@ document.addEventListener('DOMContentLoaded', () => {
         hover: true,
         tooltipDelay: 200,
         zoomView: true,
-        dragView: true
+        dragView: true,
+        hideEdgesOnDrag: true,
+        hideEdgesOnZoom: true
       }
     };
 
     state.network = new vis.Network(container, data, options);
 
+    // Track stabilization state to show progress
+    state.network.on('stabilizationStart', () => {
+      if (!state.isManualPhysics) {
+        const textEl = canvasLoader.querySelector('.loader-text');
+        if (textEl) {
+          textEl.textContent = 'Stabilizing layout: 0%';
+        }
+        showLoader(true);
+      }
+    });
+
+    state.network.on('stabilizationProgress', (params) => {
+      if (!state.isManualPhysics) {
+        const percent = Math.round((params.iterations / params.total) * 100);
+        const textEl = canvasLoader.querySelector('.loader-text');
+        if (textEl) {
+          textEl.textContent = `Stabilizing layout: ${percent}%`;
+        }
+      }
+    });
+
     // Freeze physics once stabilization iterations are done to save CPU usage
     state.network.on('stabilizationIterationsDone', () => {
-      state.network.setOptions({ physics: { enabled: false } });
-      state.physicsEnabled = false;
-      togglePhysicsBtn.classList.remove('active');
-      showToast('Layout stabilized and frozen (CPU load reduced to 0%)', 'success');
+      const textEl = canvasLoader.querySelector('.loader-text');
+      if (textEl) {
+        textEl.textContent = 'Loading telemetry...';
+      }
+      
+      if (!state.isManualPhysics) {
+        state.network.setOptions({ physics: { enabled: false } });
+        state.physicsEnabled = false;
+        togglePhysicsBtn.classList.remove('active');
+        showLoader(false);
+        showToast('Layout stabilized and frozen (CPU load reduced to 0%)', 'success');
+      } else {
+        showLoader(false);
+      }
     });
 
     // Node selection event
@@ -218,7 +252,12 @@ document.addEventListener('DOMContentLoaded', () => {
         label: edge.label
       }));
 
-      // Update DataSets
+      // Update DataSets with physics enabled to stabilize
+      state.isManualPhysics = false;
+      state.physicsEnabled = true;
+      togglePhysicsBtn.classList.add('active');
+      state.network.setOptions({ physics: { enabled: true } });
+
       state.nodesDataSet.clear();
       state.edgesDataSet.clear();
       
@@ -238,11 +277,19 @@ document.addEventListener('DOMContentLoaded', () => {
         state.network.fit({ animation: { duration: 600, easingFunction: 'easeInOutQuad' } });
       }, 200);
 
-      showToast('Graph synchronized successfully', 'success');
+      // If graph is empty, hide the loader immediately since stabilization won't run
+      if (visNodes.length === 0) {
+        showLoader(false);
+        state.network.setOptions({ physics: { enabled: false } });
+        state.physicsEnabled = false;
+        togglePhysicsBtn.classList.remove('active');
+        showToast('Graph synchronized successfully (empty)', 'info');
+      } else {
+        showToast('Graph synchronized, stabilizing layout...', 'info');
+      }
     } catch (error) {
       console.error(error);
       showToast(error.message, 'error');
-    } finally {
       showLoader(false);
     }
   }
@@ -368,6 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     togglePhysicsBtn.addEventListener('click', () => {
+      state.isManualPhysics = true;
       state.physicsEnabled = !state.physicsEnabled;
       state.network.setOptions({ physics: { enabled: state.physicsEnabled } });
       

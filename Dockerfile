@@ -8,16 +8,14 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Set the active workspace
 WORKDIR /app
 
-# Copy dependency specifications first to leverage build cache
-COPY requirements.txt .
-COPY asset_intel/requirements.txt ./asset_intel_reqs.txt
+# Copy the merged requirements specification
+COPY requirements.txt ./asset_intel/requirements.txt
 
 # Install python dependencies
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir -r asset_intel_reqs.txt
+RUN pip install --no-cache-dir -r ./asset_intel/requirements.txt
 
-# Copy the application source code
-COPY . .
+# Copy the application source code into the asset_intel package directory
+COPY . ./asset_intel/
 
 # Expose the API port
 EXPOSE 8000

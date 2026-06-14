@@ -20,8 +20,8 @@ services:
 
   web:
     build:
-      context: ..
-      dockerfile: asset_intel/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     container_name: asset-intel-web
     ports:
       - "8000:8000" # Web Dashboard UI and API

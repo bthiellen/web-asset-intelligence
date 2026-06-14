@@ -232,6 +232,11 @@ document.addEventListener('DOMContentLoaded', () => {
         hideNodeDetails();
       }
 
+      // Automatically fit viewport to show all nodes after dataset update
+      setTimeout(() => {
+        state.network.fit({ animation: { duration: 600, easingFunction: 'easeInOutQuad' } });
+      }, 200);
+
       showToast('Graph synchronized successfully', 'success');
     } catch (error) {
       console.error(error);

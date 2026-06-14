@@ -2,6 +2,7 @@ import asyncio
 import logging
 import re
 from datetime import datetime, timezone
+from typing import Optional
 from asset_intel.collectors.base import BaseCollector, CollectorResult
 from asset_intel.models.entities import DomainModel
 
